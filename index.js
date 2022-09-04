@@ -63,6 +63,12 @@ async function run() {
             res.send(part);
         });
 
+        app.post ('/parts', verifyJWT, verifyAdmin, async (req, res) => {
+            const product = req.body;
+            const result = await partsCollection.insertOne(product);
+            res.send(result);
+        })
+
         // user api
 
         app.get('/user', verifyJWT, async (req, res) => {
