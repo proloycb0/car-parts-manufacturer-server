@@ -37,6 +37,7 @@ async function run() {
         const usersCollection = client.db('carnoCarUser').collection('users');
         const paymentCollection = client.db('carnoCarUser').collection('payments');
         const reviewsCollection = client.db('carnoCarUser').collection('review');
+        const blogsCollection = client.db('carnoCarUser').collection('blogs');
 
         const verifyAdmin = async (req, res, next) => {
             const requester = req.decoded.email;
@@ -200,10 +201,18 @@ async function run() {
             const result = await reviewsCollection.find().toArray();
             const review = result.reverse();
             res.send(review);
-        })
+        });
+
         app.post('/review', verifyJWT, async (req, res) => {
             const reviews = req.body;
             const result = await reviewsCollection.insertOne(reviews);
+            res.send(result);
+        });
+
+        // blogs api 
+
+        app.get('/blogs', async (req, res) => {
+            const result = await blogsCollection.find().toArray();
             res.send(result);
         })
     }
