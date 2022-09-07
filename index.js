@@ -221,7 +221,11 @@ async function run() {
 
         // review api
 
-        
+        app.get('/review', async (req, res) => {
+            const result = await reviewsCollection.find().toArray();
+            const review = result.reverse();
+            res.send(review);
+        });
 
         app.post('/review', verifyJWT, async (req, res) => {
             const reviews = req.body;
