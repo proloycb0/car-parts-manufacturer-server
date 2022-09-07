@@ -141,6 +141,13 @@ async function run() {
             res.send(result);
         });
 
+        app.delete('/user/:email', verifyJWT, verifyAdmin, async (req, res) => {
+            const email = req.params.email;
+            const filter = { email: email };
+            const result = await usersCollection.deleteOne(filter);
+            res.send(result);
+        });
+
         // orders api
 
         app.get('/order', verifyJWT, async (req, res) => {
