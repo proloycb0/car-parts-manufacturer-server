@@ -219,7 +219,15 @@ async function run() {
             res.send({ clientSecret: paymentIntent.client_secret})
         });
 
+        // review api
+
         
+
+        app.post('/review', verifyJWT, async (req, res) => {
+            const reviews = req.body;
+            const result = await reviewsCollection.insertOne(reviews);
+            res.send(result);
+        });
 
         // blogs api 
 
