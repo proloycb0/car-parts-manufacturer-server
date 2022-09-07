@@ -239,25 +239,6 @@ async function run() {
             const result = await blogsCollection.find().toArray();
             res.send(result);
         });
-
-        // update quantity
-        app.put('/updateQuantity/:id', verifyJWT, async (req , res) => {
-            const id = req.params.id;
-            const data = req.body;
-            const filter = {_id: ObjectId(id)}
-            const options = {upsert: true};
-            const updateDoc = {
-                $set: {
-                    quantity: data.updatedQuantity,
-                }
-            }
-            const result = await partsCollection.updateOne(
-                filter,
-                updateDoc,
-                options
-            );
-            res.send(result);
-        })
     }
     finally { }
 }
