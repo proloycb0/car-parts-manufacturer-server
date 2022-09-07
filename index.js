@@ -219,19 +219,7 @@ async function run() {
             res.send({ clientSecret: paymentIntent.client_secret})
         });
 
-        // review api
-
-        app.get('/review', async (req, res) => {
-            const result = await reviewsCollection.find().toArray();
-            const review = result.reverse();
-            res.send(review);
-        });
-
-        app.post('/review', verifyJWT, async (req, res) => {
-            const reviews = req.body;
-            const result = await reviewsCollection.insertOne(reviews);
-            res.send(result);
-        });
+        
 
         // blogs api 
 
