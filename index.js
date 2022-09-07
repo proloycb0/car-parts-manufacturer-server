@@ -9,7 +9,7 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
 // middleware of cors and express
 
 app.use(cors({
-    origin: "https://carnocar-parts-manufacture.web.app/" 
+    origin: "https://carnocar-parts-manufacture.web.app" 
    }));
 app.use(express.json());
 
