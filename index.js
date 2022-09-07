@@ -68,7 +68,14 @@ async function run() {
             const product = req.body;
             const result = await partsCollection.insertOne(product);
             res.send(result);
-        })
+        });
+
+        app.delete('/parts/:id', verifyJWT, verifyAdmin, async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) };
+            const result = await partsCollection.deleteOne(filter);
+            res.send(result);
+        });
 
         // user api
 
@@ -144,6 +151,11 @@ async function run() {
             }
         });
 
+        app.get('/orders', verifyJWT, verifyAdmin, async (req, res) => {
+            const result = await ordersCollection.find().toArray();
+            res.send(result);
+        })
+
         app.get('/orders/:id', verifyJWT, async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id)};
@@ -172,6 +184,18 @@ async function run() {
             const result = await paymentCollection.insertOne(payment);
             const updatedOrders = await ordersCollection.updateOne(filter, updateDoc, options);
             res.send(updateDoc);
+        });
+
+        app.put('/order/:id', verifyJWT, verifyAdmin, async (req, res) => {
+            const id = req.params.id;
+            const payment = req.body;
+            const filter = {_id: ObjectId(id)};
+            const options = {upsert: true};
+            const updateDoc = {
+                $set: payment
+            }
+            const updateOrders = await ordersCollection.updateOne(filter, updateDoc, options);
+            res.send(updateOrders);
         })
 
         app.delete('/orders/:id', verifyJWT, async (req, res) => {
@@ -213,6 +237,25 @@ async function run() {
 
         app.get('/blogs', async (req, res) => {
             const result = await blogsCollection.find().toArray();
+            res.send(result);
+        });
+
+        // update quantity
+        app.put('/updateQuantity/:id', verifyJWT, async (req , res) => {
+            const id = req.params.id;
+            const data = req.body;
+            const filter = {_id: ObjectId(id)}
+            const options = {upsert: true};
+            const updateDoc = {
+                $set: {
+                    quantity: data.updatedQuantity,
+                }
+            }
+            const result = await partsCollection.updateOne(
+                filter,
+                updateDoc,
+                options
+            );
             res.send(result);
         })
     }
