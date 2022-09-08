@@ -5,12 +5,14 @@ require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 5000;
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const nodemailer = require('nodemailer');
+const mg = require('nodemailer-mailgun-transport');
 // middleware of cors and express
 
 app.use(cors({
-    origin: "https://carnocar-parts-manufacture.web.app" 
-   }));
+    origin: "https://carnocar-parts-manufacture.web.app"
+}));
 app.use(express.json());
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.o4ve3pa.mongodb.net/?retryWrites=true&w=majority`;
@@ -30,6 +32,48 @@ function verifyJWT(req, res, next) {
         next();
     });
 }
+
+const auth = {
+    auth: {
+        api_key: `${process.env.EMAIL_SECRET_KEY}`,
+        domain: 'sandbox0c0f7608b00742d3a99098faa0f8a01d.mailgun.org'
+    }
+}
+
+const nodemailerMailgun = nodemailer.createTransport(mg(auth));
+
+function sendOrderEmail(orders) {
+    const { userEmail, userName, product, price, orderQuantity } = orders;
+  
+    var email = {
+      from: process.env.EMAIL_SENDER,
+      to: userEmail,
+      subject: `Your Order for ${product} is on ${orderQuantity} quantity price- $ ${price} is Confirmed`,
+      text: `Your Order for ${product} is on ${orderQuantity} quantity price- $ ${price} is Confirmed`,
+      html: `
+        <div>
+          <p> Hello ${userName}, </p>
+          <h3>Your Order for ${product} is confirmed</h3>
+          <p>Looking forward to seeing your quantity ${orderQuantity} price ${price}.</p>
+          
+          <h3>Our Address</h3>
+          <p>Andor Killa Bandorban</p>
+          <p>Bangladesh</p>
+          <a href="https://proloycb.netlify.app/">unsubscribe</a>
+        </div>
+      `
+    };
+  
+    nodemailerMailgun.sendMail(email, (err, info) => {
+        if (err) {
+            console.log(`Error: ${err}`);
+        }
+        else {
+            console.log(`Response: ${info}`);
+        }
+    });
+  
+  }
 async function run() {
     try {
         await client.connect();
@@ -43,12 +87,12 @@ async function run() {
 
         const verifyAdmin = async (req, res, next) => {
             const requester = req.decoded.email;
-            const requesterAccount = await usersCollection.findOne({email: requester});
-            if(requesterAccount.role === 'admin'){
+            const requesterAccount = await usersCollection.findOne({ email: requester });
+            if (requesterAccount.role === 'admin') {
                 next();
             }
             else {
-                res.status(403).send({message: 'forbidden access'})
+                res.status(403).send({ message: 'forbidden access' })
             }
         }
 
@@ -66,7 +110,7 @@ async function run() {
             res.send(part);
         });
 
-        app.post ('/parts', verifyJWT, verifyAdmin, async (req, res) => {
+        app.post('/parts', verifyJWT, verifyAdmin, async (req, res) => {
             const product = req.body;
             const result = await partsCollection.insertOne(product);
             res.send(result);
@@ -101,16 +145,16 @@ async function run() {
 
         app.get('/admin/:email', verifyJWT, async (req, res) => {
             const email = req.params.email;
-            const user = await usersCollection.findOne({email: email});
+            const user = await usersCollection.findOne({ email: email });
             const isAdmin = user.role === 'admin';
-            res.send({admin: isAdmin});
+            res.send({ admin: isAdmin });
         })
 
-        app.put('/user/admin/:email', verifyJWT, verifyAdmin, async(req, res) => {
+        app.put('/user/admin/:email', verifyJWT, verifyAdmin, async (req, res) => {
             const email = req.params.email;
-            const filter = {email: email};
+            const filter = { email: email };
             const updateDoc = {
-                $set: {role: 'admin'},
+                $set: { role: 'admin' },
             };
             const result = await usersCollection.updateOne(filter, updateDoc);
             res.send(result);
@@ -167,7 +211,7 @@ async function run() {
 
         app.get('/orders/:id', verifyJWT, async (req, res) => {
             const id = req.params.id;
-            const query = { _id: ObjectId(id)};
+            const query = { _id: ObjectId(id) };
             const order = await ordersCollection.findOne(query);
             res.send(order)
         })
@@ -175,6 +219,7 @@ async function run() {
         app.post('/orders', async (req, res) => {
             const orders = req.body;
             const result = await ordersCollection.insertOne(orders);
+            sendOrderEmail(orders);
             res.send(result);
         });
 
@@ -182,7 +227,7 @@ async function run() {
             const id = req.params.id;
             const payment = req.body;
             const filter = { _id: ObjectId(id) };
-            const options = {upsert: true};
+            const options = { upsert: true };
             const updateDoc = {
                 $set: {
                     paid: true,
@@ -198,8 +243,8 @@ async function run() {
         app.put('/order/:id', verifyJWT, verifyAdmin, async (req, res) => {
             const id = req.params.id;
             const payment = req.body;
-            const filter = {_id: ObjectId(id)};
-            const options = {upsert: true};
+            const filter = { _id: ObjectId(id) };
+            const options = { upsert: true };
             const updateDoc = {
                 $set: payment
             }
@@ -225,7 +270,7 @@ async function run() {
                 currency: 'usd',
                 payment_method_types: ['card']
             });
-            res.send({ clientSecret: paymentIntent.client_secret})
+            res.send({ clientSecret: paymentIntent.client_secret })
         });
 
         // review api
