@@ -35,7 +35,7 @@ function verifyJWT(req, res, next) {
 
 const auth = {
     auth: {
-        api_key: `${process.env.EMAIL_SECRET_KEY}`,
+        api_key: process.env.EMAIL_SECRET_KEY,
         domain: 'sandbox0c0f7608b00742d3a99098faa0f8a01d.mailgun.org'
     }
 }
