@@ -10,9 +10,7 @@ const nodemailer = require('nodemailer');
 const mg = require('nodemailer-mailgun-transport');
 // middleware of cors and express
 
-app.use(cors({
-    origin: "https://carnocar-parts-manufacture.web.app"
-}));
+app.use(cors());
 app.use(express.json());
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.o4ve3pa.mongodb.net/?retryWrites=true&w=majority`;
